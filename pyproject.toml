@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "async-pavlov"
+version = "0.1.0"
+description = "Async wrapper for Pavlov VR RCON commands"
+authors = ["makubob <makupi@icloud.com>"]
+license = "GPL-3.0"
+packages = [{include = "pavlov"}]
+readme = "README.md"
+repository = "https://github.com/makupi/async-pavlov"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
