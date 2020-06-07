@@ -8,14 +8,17 @@ class InvalidPassword(Exception):
 
 
 class PavlovRCON:
-    def __init__(self, ip, port, password):
+    def __init__(self, ip, port, password, timeout=5):
         self.ip = ip
         self.port = port
         self.password = hashlib.md5(password.encode()).hexdigest()
+        self.timeout = timeout
         self.reader, self.writer = None, None
 
     async def _connect(self):
-        self.reader, self.writer = await asyncio.open_connection(self.ip, self.port)
+        self.reader, self.writer = await asyncio.wait_for(
+            asyncio.open_connection(self.ip, self.port), self.timeout
+        )
 
     async def _disconnect(self):
         self.writer.close()
