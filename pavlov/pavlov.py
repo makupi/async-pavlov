@@ -41,7 +41,7 @@ class PavlovRCON:
 
     async def _send(self, data):
         self.writer.write(data.encode())
-        await self.writer.drain()
+        await asyncio.wait_for(self.writer.drain(), self.timeout)
 
     async def _auth(self):
         await self._send(self.password)
@@ -62,7 +62,9 @@ class PavlovRCON:
 
     async def _recv(self):
         try:
-            data = await self.reader.readuntil(separator=b"\r\n")
+            data = await asyncio.wait_for(
+                self.reader.readuntil(separator=b"\r\n"), self.timeout
+            )
             data = data.decode()
             try:
                 return json.loads(data)
