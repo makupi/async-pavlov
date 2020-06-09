@@ -1,8 +1,9 @@
 import asyncio
 import hashlib
 import json
-import sys
-import traceback
+import logging
+
+logging.getLogger("async-pavlov").addHandler(logging.NullHandler())
 
 
 class InvalidPassword(Exception):
@@ -51,7 +52,7 @@ class PavlovRCON:
                 pass
 
     async def _send(self, data):
-        print(f"RCON _send {data=}")
+        logging.info(f"{self.port} - RCON _send {data=}")
         await self._flush_reader()
         self.writer.write(data.encode())
         async with self._drain_lock:
@@ -80,7 +81,7 @@ class PavlovRCON:
         async with self._recv_lock:
             data = await asyncio.wait_for(self.reader.read(2048), self.timeout)
         data = data.decode()
-        print(f"RCON _recv {data=}")
+        logging.info(f"{self.port} - RCON _recv {data=}")
         try:
             return json.loads(data)
         except json.JSONDecodeError:
