@@ -1,6 +1,8 @@
 import asyncio
 import hashlib
 import json
+import sys
+import traceback
 
 
 class InvalidPassword(Exception):
@@ -14,6 +16,8 @@ class PavlovRCON:
         self.password = hashlib.md5(password.encode()).hexdigest()
         self.timeout = timeout
         self.reader, self.writer = None, None
+        self._recv_lock = asyncio.Lock()
+        self._drain_lock = asyncio.Lock()
 
     async def open(self):
         if not self.is_connected():
@@ -39,9 +43,19 @@ class PavlovRCON:
             await self._disconnect()
         return data
 
+    async def _flush_reader(self):
+        async with self._recv_lock:
+            try:
+                await asyncio.wait_for(self.reader.read(512), 0.1)
+            except asyncio.exceptions.TimeoutError:
+                pass
+
     async def _send(self, data):
+        print(f"RCON _send {data=}")
+        await self._flush_reader()
         self.writer.write(data.encode())
-        await asyncio.wait_for(self.writer.drain(), self.timeout)
+        async with self._drain_lock:
+            await asyncio.wait_for(self.writer.drain(), self.timeout)
 
     async def _auth(self):
         await self._send(self.password)
@@ -53,7 +67,9 @@ class PavlovRCON:
         self.reader, self.writer = await asyncio.wait_for(
             asyncio.open_connection(self.ip, self.port), self.timeout
         )
-        await self._auth()
+        data = await self._recv()
+        if "Password" in data:
+            await self._auth()
 
     async def _disconnect(self):
         if self.writer:
@@ -61,16 +77,12 @@ class PavlovRCON:
             await self.writer.wait_closed()
 
     async def _recv(self):
+        async with self._recv_lock:
+            data = await asyncio.wait_for(self.reader.read(2048), self.timeout)
+        data = data.decode()
+        print(f"RCON _recv {data=}")
         try:
-            data = await asyncio.wait_for(
-                self.reader.readuntil(separator=b"\r\n"), self.timeout
-            )
-            data = data.decode()
-            try:
-                return json.loads(data)
-            except json.JSONDecodeError:
-                pass
-            return data
-        except Exception as ex:
-            print(f"EXCEPTION <_recv>: {ex}")
-            return None
+            return json.loads(data)
+        except json.JSONDecodeError:
+            pass
+        return data

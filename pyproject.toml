@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "async-pavlov"
-version = "0.2.2"
+version = "0.2.3"
 description = "Async wrapper for Pavlov VR RCON commands"
 authors = ["makubob <makupi@icloud.com>"]
 license = "GPL-3.0"
