@@ -4,6 +4,12 @@ Async wrapper for pavlov RCON commands
 # Requirements
 Python 3.7+
 
+# Install
+
+```shell
+pip install async-pavlov
+```
+
 # Usage
 ```py
 import asyncio
