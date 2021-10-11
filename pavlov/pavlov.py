@@ -79,7 +79,7 @@ class PavlovRCON:
 
     async def _recv(self):
         async with self._recv_lock:
-            data = await asyncio.wait_for(self.reader.read(2048), self.timeout)
+            data = await asyncio.wait_for(self.reader.read(4096), self.timeout)
         data = data.decode()
         logging.info(f"{self.port} - RCON _recv {data=}")
         try:
